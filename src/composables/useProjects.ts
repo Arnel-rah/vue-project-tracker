@@ -22,10 +22,10 @@ export function useProjects() {
     return Math.floor(diff / (1000 * 60 * 60 * 24))
   }
 
+  const nextId = Math.max(0, ...projects.value.map((p) => p.id)) + 1
   function addProject(project: Omit<Project, 'id'>) {
-    const nextId = Math.max(0, ...projects.value.map((p) => p.id)) + 1
-    projects.value.push({ ...project, id: nextId })
-  }
+  projects.value.push({ ...project, id: nextId })
+}
 
   function updateStatus(id: number, status: ProjectStatus) {
     const project = projects.value.find((p) => p.id === id)
