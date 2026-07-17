@@ -27,6 +27,7 @@ const emit = defineEmits<{
     </button>
   </div>
 </template>
+
 <style scoped>
 .tag-filter {
   display: flex;
@@ -36,13 +37,13 @@ const emit = defineEmits<{
 }
 
 button {
-  background-color: #f8fafc;
-  color: #64748b;
-  border: 1px solid #e2e8f0;
+  background-color: var(--color-surface);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
   padding: 0.5rem 1.25rem;
-  border-radius: 9999px;
+  border-radius: var(--radius-full);
   font-size: 0.85rem;
-  font-weight: 550;
+  font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
   user-select: none;
@@ -50,16 +51,16 @@ button {
 }
 
 button:hover {
-  background-color: #f1f5f9;
-  color: #1e293b;
-  border-color: #cbd5e1;
+  background-color: #251733;
+  color: var(--color-text);
+  border-color: #3f2757;
 }
 
 button.active {
-  background-color: #2563eb;
+  background-color: var(--color-accent);
   color: #ffffff;
-  border-color: #2563eb;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+  border-color: var(--color-accent);
+  box-shadow: 0 4px 14px rgba(255, 42, 122, 0.3);
 }
 
 button:active {
