@@ -36,12 +36,20 @@ export function useProjects() {
     projects.value = projects.value.filter((p) => p.id !== id)
   }
 
+  function updateProject(id: number, updates: Omit<Project, 'id'>) {
+  const index = projects.value.findIndex((p) => p.id === id)
+  if (index !== -1) {
+    projects.value[index] = { ...updates, id }
+  }
+}
+
   return {
     projects,
     filteredProjects,
     allTags,
     selectedTag,
     daysSinceActivity,
+    updateProject,
     addProject,
     updateStatus,
     removeProject,
