@@ -6,4 +6,5 @@ export interface Project {
   stack: string[]
   status: ProjectStatus
   lastActivity: string
+  githubUrl?: string
 }
