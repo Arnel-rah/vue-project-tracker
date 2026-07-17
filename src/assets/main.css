@@ -7,16 +7,16 @@
 }
 
 :root {
-  --color-active: #22c55e;
+  --color-active: #00ffd0;
   --color-paused: #f59e0b;
-  --color-archived: #9ca3af;
+  --color-archived: #6b7280;
 
-  --color-bg: #f8fafc;
-  --color-surface: #ffffff;
-  --color-border: #e2e8f0;
-  --color-text: #0f172a;
-  --color-text-muted: #64748b;
-  --color-accent: #2563eb;
+  --color-bg: #0d0714;
+  --color-surface: #1a1024;
+  --color-border: #2c1b3d;
+  --color-text: #ffffff;
+  --color-text-muted: #9d8fbc;
+  --color-accent: #ff2a7a;
 
   --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
 
@@ -62,14 +62,15 @@ button {
   cursor: pointer;
   border: 1px solid var(--color-border);
   background: var(--color-surface);
+  color: var(--color-text);
   border-radius: var(--radius-sm);
   padding: 0.5rem 1rem;
   transition: all 0.2s ease;
 }
 
 button:hover {
-  background-color: #f1f5f9;
-  border-color: #cbd5e1;
+  background-color: #251733;
+  border-color: #3f2757;
 }
 
 a {
