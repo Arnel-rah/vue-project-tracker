@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { Edit2, Trash2, Clock } from 'lucide-vue-next'
 import type { Project } from '@/types/project'
 
 const props = defineProps<{
@@ -15,13 +16,13 @@ const emit = defineEmits<{
 const statusColor = computed(() => {
   switch (props.project.status) {
     case 'active':
-      return '#22c55e'
+      return 'var(--color-active)'
     case 'paused':
-      return '#f59e0b'
+      return 'var(--color-paused)'
     case 'archived':
-      return '#6b7280'
+      return 'var(--color-archived)'
     default:
-      return '#6b7280'
+      return 'var(--color-archived)'
   }
 })
 
@@ -32,7 +33,12 @@ const daysAgo = computed(() => props.daysSinceActivity(props.project.lastActivit
   <div class="card">
     <div class="card-header">
       <h3>{{ project.name }}</h3>
-      <span class="status-dot" :style="{ backgroundColor: statusColor }" />
+      <span
+        class="status-badge"
+        :style="{ '--badge-color': statusColor }"
+      >
+        {{ project.status }}
+      </span>
     </div>
 
     <div class="tags">
@@ -41,57 +47,139 @@ const daysAgo = computed(() => props.daysSinceActivity(props.project.lastActivit
       </span>
     </div>
 
-    <p class="activity">Last activity: {{ daysAgo }} day(s) ago</p>
+    <div class="activity-wrapper">
+      <Clock :size="14" class="activity-icon" />
+      <p class="activity">Active {{ daysAgo }}d ago</p>
+    </div>
 
     <div class="actions">
-      <button @click="emit('edit', project.id)">Edit</button>
-      <button @click="emit('remove', project.id)">Delete</button>
+      <button class="btn-edit" @click="emit('edit', project.id)">
+        <Edit2 :size="14" /> Edit
+      </button>
+      <button class="btn-delete" @click="emit('remove', project.id)">
+        <Trash2 :size="14" /> Delete
+      </button>
     </div>
   </div>
 </template>
 
 <style scoped>
 .card {
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 1rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 1rem;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  border-color: #3f2757;
+  box-shadow: 0 8px 24px rgba(13, 7, 20, 0.5);
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: 0.5rem;
 }
 
-.status-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+h3 {
+  color: var(--color-text);
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.status-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+  background-color: rgba(0, 0, 0, 0.2);
+  color: var(--badge-color);
+  border: 1px solid var(--badge-color);
+  white-space: nowrap;
 }
 
 .tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem;
+  gap: 0.375rem;
 }
 
 .tag {
   font-size: 0.75rem;
-  background: #f3f4f6;
-  padding: 0.15rem 0.5rem;
-  border-radius: 999px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background: #251733;
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
+}
+
+.activity-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: auto;
+}
+
+.activity-icon {
+  color: var(--color-text-muted);
 }
 
 .activity {
   font-size: 0.8rem;
-  color: #6b7280;
+  color: var(--color-text-muted);
+  margin: 0;
 }
 
 .actions {
   display: flex;
   gap: 0.5rem;
+  border-top: 1px solid var(--color-border);
+  padding-top: 0.85rem;
+}
+
+button {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  padding: 0.45rem 0.75rem;
+}
+
+.btn-edit {
+  background: transparent;
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+}
+
+.btn-edit:hover {
+  color: var(--color-text);
+  background: #251733;
+  border-color: #3f2757;
+}
+
+.btn-delete {
+  background: transparent;
+  color: var(--color-text-muted);
+  border: 1px solid transparent;
+}
+
+.btn-delete:hover {
+  color: var(--color-accent);
+  background: rgba(255, 42, 122, 0.1);
+  border-color: rgba(255, 42, 122, 0.2);
 }
 </style>
