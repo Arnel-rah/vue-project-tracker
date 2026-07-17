@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { X } from 'lucide-vue-next'
+import { X, Github } from 'lucide-vue-next'
 import type { Project, ProjectStatus } from '@/types/project'
 
 const props = defineProps<{
@@ -16,7 +16,7 @@ const emit = defineEmits<{
 const name = ref('')
 const stackInput = ref('')
 const status = ref<ProjectStatus>('active')
-const lastActivity = ref(new Date().toISOString().slice(0, 10))
+const githubUrl = ref('')
 
 watch(
   () => props.projectToEdit,
@@ -25,7 +25,7 @@ watch(
       name.value = project.name
       stackInput.value = project.stack.join(', ')
       status.value = project.status
-      lastActivity.value = project.lastActivity
+      githubUrl.value = project.githubUrl || ''
     } else {
       resetForm()
     }
@@ -37,7 +37,7 @@ function resetForm() {
   name.value = ''
   stackInput.value = ''
   status.value = 'active'
-  lastActivity.value = new Date().toISOString().slice(0, 10)
+  githubUrl.value = ''
 }
 
 function handleSubmit() {
@@ -53,7 +53,8 @@ function handleSubmit() {
     name: name.value.trim(),
     stack,
     status: status.value,
-    lastActivity: lastActivity.value,
+    githubUrl: githubUrl.value.trim() || undefined,
+    lastActivity: props.projectToEdit?.lastActivity || new Date().toISOString().slice(0, 10),
   })
 
   resetForm()
@@ -83,6 +84,14 @@ function handleClose() {
         </label>
 
         <label>
+          <span class="label-text">GitHub Repository URL</span>
+          <div class="input-with-icon">
+            <Github :size="16" class="field-icon" />
+            <input v-model="githubUrl" type="url" placeholder="https://github.com/username/repo" />
+          </div>
+        </label>
+
+        <label>
           <span class="label-text">Stack (comma-separated)</span>
           <input v-model="stackInput" type="text" placeholder="Go, TypeScript, Postgres" />
         </label>
@@ -96,11 +105,6 @@ function handleClose() {
               <option value="archived">Archived</option>
             </select>
           </div>
-        </label>
-
-        <label>
-          <span class="label-text">Last activity</span>
-          <input v-model="lastActivity" type="date" />
         </label>
 
         <div class="modal-actions">
@@ -185,6 +189,23 @@ label {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--color-text-muted);
+}
+
+.input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.field-icon {
+  position: absolute;
+  left: 0.75rem;
+  color: #554a6f;
+  pointer-events: none;
+}
+
+.input-with-icon input {
+  padding-left: 2.25rem;
 }
 
 input,
