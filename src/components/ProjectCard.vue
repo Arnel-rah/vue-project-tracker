@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { Edit2, Trash2, Clock } from 'lucide-vue-next'
+import { ref, computed } from 'vue'
+import { Edit2, Trash2, Clock, AlertTriangle, Check, X } from 'lucide-vue-next'
 import type { Project } from '@/types/project'
 
 const props = defineProps<{
@@ -12,6 +12,8 @@ const emit = defineEmits<{
   edit: [id: number]
   remove: [id: number]
 }>()
+
+const isConfirming = ref(false)
 
 const statusColor = computed(() => {
   switch (props.project.status) {
@@ -27,10 +29,23 @@ const statusColor = computed(() => {
 })
 
 const daysAgo = computed(() => props.daysSinceActivity(props.project.lastActivity))
+
+function requestDelete() {
+  isConfirming.value = true
+}
+
+function cancelDelete() {
+  isConfirming.value = false
+}
+
+function confirmDelete() {
+  emit('remove', props.project.id)
+  isConfirming.value = false
+}
 </script>
 
 <template>
-  <div class="card">
+  <div class="card" :class="{ 'shake-border': isConfirming }">
     <div class="card-header">
       <h3>{{ project.name }}</h3>
       <span
@@ -53,12 +68,31 @@ const daysAgo = computed(() => props.daysSinceActivity(props.project.lastActivit
     </div>
 
     <div class="actions">
-      <button class="btn-edit" @click="emit('edit', project.id)">
-        <Edit2 :size="14" /> Edit
-      </button>
-      <button class="btn-delete" @click="emit('remove', project.id)">
-        <Trash2 :size="14" /> Delete
-      </button>
+      <template v-if="!isConfirming">
+        <button class="btn-edit" @click="emit('edit', project.id)">
+          <Edit2 :size="14" /> Edit
+        </button>
+        <button class="btn-delete" @click="requestDelete">
+          <Trash2 :size="14" /> Delete
+        </button>
+      </template>
+
+      <template v-else>
+        <div class="confirm-zone">
+          <div class="confirm-message">
+            <AlertTriangle :size="14" class="warn-icon" />
+            <span>Are you sure?</span>
+          </div>
+          <div class="confirm-buttons">
+            <button class="btn-confirm-yes" @click="confirmDelete">
+              <Check :size="14" /> Yes
+            </button>
+            <button class="btn-confirm-no" @click="cancelDelete">
+              <X :size="14" /> No
+            </button>
+          </div>
+        </div>
+      </template>
     </div>
   </div>
 </template>
@@ -79,6 +113,11 @@ const daysAgo = computed(() => props.daysSinceActivity(props.project.lastActivit
   transform: translateY(-2px);
   border-color: #3f2757;
   box-shadow: 0 8px 24px rgba(13, 7, 20, 0.5);
+}
+
+.shake-border {
+  border-color: var(--color-accent) !important;
+  box-shadow: 0 0 12px rgba(255, 42, 122, 0.2);
 }
 
 .card-header {
@@ -146,6 +185,7 @@ h3 {
   gap: 0.5rem;
   border-top: 1px solid var(--color-border);
   padding-top: 0.85rem;
+  min-height: 2.6rem;
 }
 
 button {
@@ -181,5 +221,64 @@ button {
   color: var(--color-accent);
   background: rgba(255, 42, 122, 0.1);
   border-color: rgba(255, 42, 122, 0.2);
+}
+
+.confirm-zone {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.confirm-message {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.warn-icon {
+  animation: pulse 1.5s infinite;
+}
+
+.confirm-buttons {
+  display: flex;
+  gap: 0.375rem;
+}
+
+.confirm-buttons button {
+  flex: none;
+  padding: 0.35rem 0.75rem;
+}
+
+.btn-confirm-yes {
+  background: var(--color-accent);
+  color: #ffffff;
+  border: 1px solid var(--color-accent);
+}
+
+.btn-confirm-yes:hover {
+  background: #e01f65;
+  border-color: #e01f65;
+}
+
+.btn-confirm-no {
+  background: #251733;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.btn-confirm-no:hover {
+  background: #3f2757;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 </style>
