@@ -31,12 +31,7 @@ body {
 }
 
 body {
-  font-family:
-    "Inter",
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
+  font-family: var(--font-mono);
   background-color: var(--color-bg);
   color: #111827;
   line-height: 1.5;
