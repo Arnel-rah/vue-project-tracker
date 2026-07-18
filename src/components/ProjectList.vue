@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Plus, FolderOpen, BarChart3 } from 'lucide-vue-next'
+import { Plus, FolderOpen, BarChart3, Pause } from 'lucide-vue-next'
 import { useProjects } from '@/composables/useProjects'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import ProjectCard from './ProjectCard.vue'
@@ -22,7 +22,10 @@ const isModalOpen = ref(false)
 const projectToEdit = ref<Project | null>(null)
 
 const totalCount = computed(() => filteredProjects.value.length)
-const activeCount = computed(() => filteredProjects.value.filter(p => p.status === 'active').length)
+const activeCount = computed(() => filteredProjects.value.filter((p) => p.status === 'active').length)
+const pausedCount = computed(() => filteredProjects.value.filter((p) => p.status === 'paused').length)
+
+const hasActiveFilter = computed(() => selectedTag.value !== null)
 
 function openCreateModal() {
   projectToEdit.value = null
@@ -53,10 +56,21 @@ function handleClose() {
   isModalOpen.value = false
   projectToEdit.value = null
 }
+
+function clearFilter() {
+  selectedTag.value = null
+}
 </script>
 
 <template>
   <DashboardLayout>
+    <div class="page-header">
+      <div>
+        <h1>Dashboard</h1>
+        <p class="page-subtitle">Overview of your projects</p>
+      </div>
+    </div>
+
     <header class="stats-overview">
       <div class="stat-card">
         <div class="stat-icon-wrapper">
@@ -67,6 +81,7 @@ function handleClose() {
           <span class="stat-value">{{ totalCount }}</span>
         </div>
       </div>
+
       <div class="stat-card">
         <div class="stat-icon-wrapper active-stat">
           <BarChart3 :size="20" />
@@ -74,6 +89,16 @@ function handleClose() {
         <div class="stat-info">
           <span class="stat-label">Active Projects</span>
           <span class="stat-value">{{ activeCount }}</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon-wrapper paused-stat">
+          <Pause :size="20" />
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">Paused Projects</span>
+          <span class="stat-value">{{ pausedCount }}</span>
         </div>
       </div>
     </header>
@@ -90,7 +115,7 @@ function handleClose() {
     </div>
 
     <main class="content-body">
-      <div v-if="filteredProjects.length > 0" class="grid">
+      <TransitionGroup v-if="filteredProjects.length > 0" name="card" tag="div" class="grid">
         <ProjectCard
           v-for="project in filteredProjects"
           :key="project.id"
@@ -99,12 +124,26 @@ function handleClose() {
           @edit="handleEdit"
           @remove="handleRemove"
         />
-      </div>
+      </TransitionGroup>
 
       <div v-else class="empty-state">
         <FolderOpen :size="40" class="empty-icon" />
-        <p class="empty-title">Aucun projet trouvé</p>
-        <p class="empty-desc">Il n'y a aucun projet qui correspond au filtre sélectionné.</p>
+        <p class="empty-title">No projects found</p>
+        <p class="empty-desc">
+          {{
+            hasActiveFilter
+              ? "There are no projects matching the selected filter."
+              : "You haven't created any projects yet. Create your first one to get started."
+          }}
+        </p>
+        <div class="empty-actions">
+          <button v-if="hasActiveFilter" class="empty-btn-secondary" @click="clearFilter">
+            Reset filter
+          </button>
+          <button class="empty-btn-primary" @click="openCreateModal">
+            <Plus :size="16" :stroke-width="2.5" /> New project
+          </button>
+        </div>
       </div>
     </main>
 
@@ -118,55 +157,100 @@ function handleClose() {
 </template>
 
 <style scoped>
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 2rem;
+}
+
+.page-header h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  font-family: sans-serif;
+  color: var(--color-text, #ffffff);
+  margin: 0 0 0.25rem 0;
+  letter-spacing: -0.02em;
+}
+
+.page-subtitle {
+  font-size: 0.9rem;
+  font-family: sans-serif;
+  color: var(--color-text-muted, #94a3b8);
+  margin: 0;
+}
+
 .stats-overview {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1.25rem;
-  margin-bottom: 2rem;
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
 }
 
 .stat-card {
   background-color: var(--color-surface, #1a1024);
   border: 1px solid var(--color-border, #251733);
   border-radius: var(--radius-lg, 12px);
-  padding: 1.25rem;
+  padding: 1.5rem;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.25rem;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 42, 122, 0.3);
+  box-shadow: 0 12px 24px rgba(13, 7, 20, 0.5);
 }
 
 .stat-icon-wrapper {
-  background-color: #251733;
+  background-color: rgba(37, 23, 51, 0.6);
   color: var(--color-text-muted, #94a3b8);
-  padding: 0.75rem;
+  padding: 0.85rem;
   border-radius: var(--radius-md, 8px);
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid rgba(63, 39, 87, 0.3);
 }
 
 .stat-icon-wrapper.active-stat {
   color: #00ffd0;
-  background-color: rgba(0, 255, 208, 0.05);
+  background-color: rgba(0, 255, 208, 0.06);
+  border-color: rgba(0, 255, 208, 0.15);
+}
+
+.stat-icon-wrapper.paused-stat {
+  color: #ffb020;
+  background-color: rgba(255, 176, 32, 0.06);
+  border-color: rgba(255, 176, 32, 0.15);
 }
 
 .stat-info {
   display: flex;
   flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
 }
 
 .stat-label {
   font-size: 0.75rem;
   font-weight: 700;
+  font-family: sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--color-text-muted, #94a3b8);
+  white-space: nowrap;
 }
 
 .stat-value {
-  font-size: 1.5rem;
-  font-weight: 800;
+  font-size: 1.75rem;
+  font-weight: 700;
+  font-family: sans-serif;
   color: var(--color-text, #ffffff);
+  line-height: 1;
 }
 
 .toolbar {
@@ -189,6 +273,7 @@ function handleClose() {
   border-radius: var(--radius-md, 8px);
   font-size: 0.875rem;
   font-weight: 600;
+  font-family: sans-serif;
   white-space: nowrap;
   cursor: pointer;
   display: inline-flex;
@@ -212,7 +297,30 @@ function handleClose() {
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1.25rem;
+  gap: 1.5rem;
+}
+
+.card-enter-active,
+.card-leave-active {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.card-enter-from {
+  opacity: 0;
+  transform: translateY(12px) scale(0.97);
+}
+
+.card-leave-to {
+  opacity: 0;
+  transform: translateY(-8px) scale(0.97);
+}
+
+.card-leave-active {
+  position: absolute;
+}
+
+.card-move {
+  transition: transform 0.25s ease;
 }
 
 .empty-state {
@@ -221,7 +329,7 @@ function handleClose() {
   border: 2px dashed var(--color-border, #251733);
   border-radius: var(--radius-lg, 12px);
   background-color: var(--color-surface, #1a1024);
-  max-width: 420px;
+  max-width: 440px;
   margin: 2rem auto;
 }
 
@@ -233,6 +341,7 @@ function handleClose() {
 .empty-title {
   color: var(--color-text, #ffffff);
   font-weight: 600;
+  font-family: sans-serif;
   font-size: 1.1rem;
   margin: 0 0 0.5rem 0;
 }
@@ -240,8 +349,56 @@ function handleClose() {
 .empty-desc {
   color: var(--color-text-muted, #94a3b8);
   font-size: 0.875rem;
-  margin: 0;
+  font-family: sans-serif;
+  margin: 0 0 1.5rem 0;
   line-height: 1.5;
+}
+
+.empty-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.empty-btn-primary {
+  background-color: var(--color-accent, #ff2a7a);
+  color: #ffffff;
+  border: 1px solid var(--color-accent, #ff2a7a);
+  padding: 0.55rem 1.1rem;
+  border-radius: var(--radius-md, 8px);
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: sans-serif;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.empty-btn-primary:hover {
+  background-color: #e01f65;
+  border-color: #e01f65;
+}
+
+.empty-btn-secondary {
+  background: transparent;
+  color: var(--color-text-muted, #94a3b8);
+  border: 1px solid var(--color-border, #251733);
+  padding: 0.55rem 1.1rem;
+  border-radius: var(--radius-md, 8px);
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.empty-btn-secondary:hover {
+  color: var(--color-text, #ffffff);
+  border-color: rgba(255, 42, 122, 0.4);
+  background-color: #251733;
 }
 
 @media (max-width: 640px) {
@@ -252,6 +409,10 @@ function handleClose() {
 
   .new-btn {
     justify-content: center;
+  }
+
+  .page-header {
+    align-items: flex-start;
   }
 }
 </style>
