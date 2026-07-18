@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { LayoutDashboard, Settings, ChevronLeft, ChevronRight, Folder, RefreshCw } from 'lucide-vue-next'
 
-const isCollapsed = ref(false)
+const isCollapsed = ref(true)
+
+const toggleLabel = computed(() => (isCollapsed.value ? 'Ouvrir' : 'Fermer'))
 
 function toggleSidebar() {
   isCollapsed.value = !isCollapsed.value
@@ -19,35 +21,42 @@ function toggleSidebar() {
         </div>
       </div>
 
-      <button
-        class="toggle-btn"
-        type="button"
-        :aria-label="isCollapsed ? 'Ouvrir la sidebar' : 'Fermer la sidebar'"
-        @click="toggleSidebar"
-      >
-        <ChevronLeft v-if="!isCollapsed" :size="20" />
-        <ChevronRight v-else :size="20" />
-      </button>
+      <div class="toggle-wrapper">
+        <button
+          class="toggle-btn"
+          type="button"
+          :aria-label="toggleLabel + ' la sidebar'"
+          @click="toggleSidebar"
+        >
+          <ChevronLeft v-if="!isCollapsed" :size="20" />
+          <ChevronRight v-else :size="20" />
+        </button>
+        <span class="toggle-tooltip">{{ toggleLabel }}</span>
+      </div>
 
       <nav class="sidebar-menu">
-        <a href="#" class="menu-item active" title="Dashboard">
+        <a href="#" class="menu-item active">
           <LayoutDashboard :size="20" class="menu-icon" />
           <span v-show="!isCollapsed">Dashboard</span>
+          <span class="menu-tooltip">Dashboard</span>
         </a>
-        <a href="#" class="menu-item" title="Projects">
+        <a href="#" class="menu-item">
           <Folder :size="20" class="menu-icon" />
           <span v-show="!isCollapsed">Projects</span>
+          <span class="menu-tooltip">Projects</span>
         </a>
-        <a href="#" class="menu-item" title="Sync Status">
+        <a href="#" class="menu-item">
           <RefreshCw :size="20" class="menu-icon" />
           <span v-show="!isCollapsed">Sync Activity</span>
+          <span class="menu-tooltip">Sync Activity</span>
         </a>
       </nav>
 
       <nav class="sidebar-footer">
-        <a href="#" class="menu-item" title="Settings">
+        <a href="#" class="menu-item">
           <Settings :size="20" class="menu-icon" />
           <span v-show="!isCollapsed">Settings</span>
+          <span class="menu-tooltip">Settings</span>
         </a>
       </nav>
     </aside>
@@ -118,10 +127,14 @@ function toggleSidebar() {
   font-family: sans-serif;
 }
 
-.toggle-btn {
+.toggle-wrapper {
   position: absolute;
   top: 84px;
   right: -11px;
+  z-index: 50;
+}
+
+.toggle-btn {
   background: var(--color-surface, #1a1024);
   border: 1px solid var(--color-border, #251733);
   color: var(--color-text-muted, #94a3b8);
@@ -132,7 +145,6 @@ function toggleSidebar() {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 50;
   padding: 0;
   transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, transform 0.15s ease;
 }
@@ -145,6 +157,47 @@ function toggleSidebar() {
 
 .toggle-btn:active {
   transform: scale(0.9);
+}
+
+.toggle-tooltip {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 10px);
+  transform: translateY(-50%) translateX(-4px);
+  background: #251733;
+  color: var(--color-text, #ffffff);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  padding: 0.35rem 0.65rem;
+  border-radius: var(--radius-sm, 6px);
+  border: 1px solid var(--color-border, #3f2757);
+  box-shadow: 0 6px 16px rgba(13, 7, 20, 0.5);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
+  z-index: 60;
+}
+
+.toggle-tooltip::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -4px;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  background: #251733;
+  border-left: 1px solid var(--color-border, #3f2757);
+  border-bottom: 1px solid var(--color-border, #3f2757);
+  rotate: 45deg;
+}
+
+.toggle-wrapper:hover .toggle-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(-50%) translateX(0);
 }
 
 .sidebar-menu {
@@ -217,18 +270,65 @@ function toggleSidebar() {
   background-color: var(--color-accent, #ff2a7a);
 }
 
+/* Tooltip des liens du menu, visible seulement quand la sidebar est repliée */
+.menu-tooltip {
+  display: none;
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 10px);
+  transform: translateY(-50%) translateX(-4px);
+  background: #251733;
+  color: var(--color-text, #ffffff);
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-sm, 6px);
+  border: 1px solid var(--color-border, #3f2757);
+  box-shadow: 0 6px 16px rgba(13, 7, 20, 0.5);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
+  z-index: 60;
+}
+
+.menu-tooltip::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -4px;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  background: #251733;
+  border-left: 1px solid var(--color-border, #3f2757);
+  border-bottom: 1px solid var(--color-border, #3f2757);
+  rotate: 45deg;
+}
+
+.sidebar.is-collapsed .menu-item .menu-tooltip {
+  display: block;
+}
+
+.sidebar.is-collapsed .menu-item:hover .menu-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(-50%) translateX(0);
+}
+
 .main-content {
   flex-grow: 1;
-  margin-left: 250px;
+  margin-left: 75px;
   padding: 2rem;
   max-width: 1400px;
-  width: calc(100% - 250px);
+  width: calc(100% - 75px);
   transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.main-content.sidebar-collapsed {
-  margin-left: 75px;
-  width: calc(100% - 75px);
+.main-content:not(.sidebar-collapsed) {
+  margin-left: 250px;
+  width: calc(100% - 250px);
 }
 
 @media (max-width: 768px) {
@@ -236,10 +336,13 @@ function toggleSidebar() {
     width: 75px;
   }
   .sidebar-brand .brand-text,
-  .menu-item span {
+  .menu-item span:not(.menu-tooltip) {
     display: none;
   }
-  .toggle-btn {
+  .menu-item .menu-tooltip {
+    display: block;
+  }
+  .toggle-wrapper {
     right: -11px;
   }
   .sidebar .menu-item {
