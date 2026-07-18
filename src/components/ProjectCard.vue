@@ -23,6 +23,8 @@ const emit = defineEmits<{
 
 const isConfirming = ref(false);
 
+const MAX_VISIBLE_TAGS = 4;
+
 const statusColor = computed(() => {
   switch (props.project.status) {
     case "active":
@@ -38,6 +40,14 @@ const statusColor = computed(() => {
 
 const daysAgo = computed(() =>
   props.daysSinceActivity(props.project.lastActivity),
+);
+
+const visibleTags = computed(() => props.project.stack.slice(0, MAX_VISIBLE_TAGS));
+const hiddenTagsCount = computed(() =>
+  Math.max(0, props.project.stack.length - MAX_VISIBLE_TAGS),
+);
+const hiddenTagsList = computed(() =>
+  props.project.stack.slice(MAX_VISIBLE_TAGS).join(", "),
 );
 
 function requestDelete() {
@@ -59,12 +69,13 @@ function confirmDelete() {
     <div class="card-body">
       <div class="card-header">
         <div class="title-area">
-          <h3>{{ project.name }}</h3>
+          <h3 :title="project.name">{{ project.name }}</h3>
           <span class="status-badge" :style="{ '--badge-color': statusColor }">
             <span class="status-dot"></span>
             {{ project.status }}
           </span>
         </div>
+
         <a
           v-if="project.githubUrl"
           :href="project.githubUrl"
@@ -78,8 +89,15 @@ function confirmDelete() {
       </div>
 
       <div class="tags">
-        <span v-for="tag in project.stack" :key="tag" class="tag">
+        <span v-for="tag in visibleTags" :key="tag" class="tag">
           {{ tag }}
+        </span>
+        <span
+          v-if="hiddenTagsCount > 0"
+          class="tag tag-more"
+          :title="hiddenTagsList"
+        >
+          +{{ hiddenTagsCount }}
         </span>
       </div>
 
@@ -141,6 +159,10 @@ function confirmDelete() {
   border-radius: var(--radius-lg);
   overflow: hidden;
   display: flex;
+  height: 100%;
+  /* Améliore le perf de rendu quand des dizaines/centaines de cards sont montées */
+  content-visibility: auto;
+  contain-intrinsic-size: 0 210px;
   transition:
     transform 0.25s ease,
     border-color 0.25s ease,
@@ -221,6 +243,7 @@ h3 {
   align-items: center;
   justify-content: center;
   padding: 0.25rem;
+  flex-shrink: 0;
 }
 
 .github-link:hover {
@@ -228,10 +251,13 @@ h3 {
   transform: scale(1.1);
 }
 
+/* Hauteur fixe sur 1 ligne pour que toutes les cards restent alignées dans la grille */
 .tags {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow: hidden;
   gap: 0.5rem;
+  height: 1.65rem;
 }
 
 .tag {
@@ -243,6 +269,15 @@ h3 {
   padding: 0.25rem 0.75rem;
   border-radius: var(--radius-md);
   border: 1px solid rgba(63, 39, 87, 0.4);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.tag-more {
+  color: var(--color-accent);
+  background: rgba(255, 42, 122, 0.08);
+  border-color: rgba(255, 42, 122, 0.25);
+  cursor: default;
 }
 
 .card-footer {
@@ -259,6 +294,7 @@ h3 {
   display: flex;
   align-items: center;
   gap: 0.375rem;
+  flex-shrink: 0;
 }
 
 .activity-icon {
@@ -275,6 +311,7 @@ h3 {
 .actions {
   display: flex;
   gap: 0.25rem;
+  flex-shrink: 0;
 }
 
 .btn-action {
@@ -288,7 +325,7 @@ h3 {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease;
   padding: 0;
 }
 
@@ -317,6 +354,7 @@ h3 {
   font-family: sans-serif;
   color: var(--color-accent);
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .warn-icon {
@@ -340,7 +378,7 @@ h3 {
   justify-content: center;
   cursor: pointer;
   padding: 0;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
 .confirm-buttons .btn-confirm-yes {
