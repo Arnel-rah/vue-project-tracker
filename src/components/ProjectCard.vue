@@ -1,46 +1,56 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { Edit2, Trash2, Clock, AlertTriangle, Check, X, Github } from 'lucide-vue-next'
-import type { Project } from '@/types/project'
+import type { Project } from "@/types/project";
+import {
+  AlertTriangle,
+  Check,
+  Clock,
+  Edit2,
+  Github,
+  Trash2,
+  X,
+} from "lucide-vue-next";
+import { computed, ref } from "vue";
 
 const props = defineProps<{
-  project: Project
-  daysSinceActivity: (date: string) => number
-}>()
+  project: Project;
+  daysSinceActivity: (date: string) => number;
+}>();
 
 const emit = defineEmits<{
-  edit: [id: number]
-  remove: [id: number]
-}>()
+  edit: [id: number];
+  remove: [id: number];
+}>();
 
-const isConfirming = ref(false)
+const isConfirming = ref(false);
 
 const statusColor = computed(() => {
   switch (props.project.status) {
-    case 'active':
-      return 'var(--color-active)'
-    case 'paused':
-      return 'var(--color-paused)'
-    case 'archived':
-      return 'var(--color-archived)'
+    case "active":
+      return "var(--color-active)";
+    case "paused":
+      return "var(--color-paused)";
+    case "archived":
+      return "var(--color-archived)";
     default:
-      return 'var(--color-archived)'
+      return "var(--color-archived)";
   }
-})
+});
 
-const daysAgo = computed(() => props.daysSinceActivity(props.project.lastActivity))
+const daysAgo = computed(() =>
+  props.daysSinceActivity(props.project.lastActivity),
+);
 
 function requestDelete() {
-  isConfirming.value = true
+  isConfirming.value = true;
 }
 
 function cancelDelete() {
-  isConfirming.value = false
+  isConfirming.value = false;
 }
 
 function confirmDelete() {
-  emit('remove', props.project.id)
-  isConfirming.value = false
+  emit("remove", props.project.id);
+  isConfirming.value = false;
 }
 </script>
 
@@ -81,10 +91,18 @@ function confirmDelete() {
 
         <div class="actions">
           <template v-if="!isConfirming">
-            <button class="btn-action btn-edit" @click="emit('edit', project.id)" title="Edit project">
+            <button
+              class="btn-action btn-edit"
+              @click="emit('edit', project.id)"
+              title="Edit project"
+            >
               <Edit2 :size="14" />
             </button>
-            <button class="btn-action btn-delete" @click="requestDelete" title="Delete project">
+            <button
+              class="btn-action btn-delete"
+              @click="requestDelete"
+              title="Delete project"
+            >
               <Trash2 :size="14" />
             </button>
           </template>
@@ -112,6 +130,10 @@ function confirmDelete() {
 </template>
 
 <style scoped>
+:root {
+  --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+}
+
 .card {
   position: relative;
   background-color: var(--color-surface);
@@ -119,7 +141,10 @@ function confirmDelete() {
   border-radius: var(--radius-lg);
   overflow: hidden;
   display: flex;
-  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
 }
 
 .card:hover {
@@ -160,7 +185,7 @@ h3 {
   color: var(--color-text);
   font-size: 1.2rem;
   font-weight: 700;
-  font-family: sans-serif;
+  font-family: var(--font-mono);
   margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -189,7 +214,9 @@ h3 {
 
 .github-link {
   color: var(--color-text-muted);
-  transition: color 0.2s ease, transform 0.2s ease;
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -333,7 +360,12 @@ h3 {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
 }
 </style>

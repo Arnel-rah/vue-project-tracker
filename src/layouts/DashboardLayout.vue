@@ -25,8 +25,8 @@ function toggleSidebar() {
         :aria-label="isCollapsed ? 'Ouvrir la sidebar' : 'Fermer la sidebar'"
         @click="toggleSidebar"
       >
-        <ChevronLeft v-if="!isCollapsed" :size="16" />
-        <ChevronRight v-else :size="16" />
+        <ChevronLeft v-if="!isCollapsed" :size="20" />
+        <ChevronRight v-else :size="20" />
       </button>
 
       <nav class="sidebar-menu">
@@ -125,8 +125,8 @@ function toggleSidebar() {
   background: var(--color-surface, #1a1024);
   border: 1px solid var(--color-border, #251733);
   color: var(--color-text-muted, #94a3b8);
-  width: 22px;
-  height: 22px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   display: flex;
   align-items: center;

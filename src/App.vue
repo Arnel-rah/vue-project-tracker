@@ -4,9 +4,6 @@ import ProjectList from '@/components/ProjectList.vue'
 
 <template>
   <main class="dashboard-root">
-    <header class="dashboard-header">
-      <h1>Project Tracker</h1>
-    </header>
     <section class="dashboard-content">
       <ProjectList />
     </section>
