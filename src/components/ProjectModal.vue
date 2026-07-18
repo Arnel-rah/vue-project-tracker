@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import { X, Github } from 'lucide-vue-next'
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
+import { X, Github, AlertCircle } from 'lucide-vue-next'
 import type { Project, ProjectStatus } from '@/types/project'
 
 const props = defineProps<{
@@ -17,6 +17,35 @@ const name = ref('')
 const stackInput = ref('')
 const status = ref<ProjectStatus>('active')
 const githubUrl = ref('')
+const nameInputRef = ref<HTMLInputElement | null>(null)
+const wasSubmitted = ref(false)
+
+const parsedStack = computed(() =>
+  stackInput.value
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+)
+
+const nameError = computed(() => {
+  if (!wasSubmitted.value) return null
+  return name.value.trim() ? null : 'Project name is required.'
+})
+
+const urlError = computed(() => {
+  if (!githubUrl.value.trim()) return null
+  try {
+    const url = new URL(githubUrl.value.trim())
+    if (!url.hostname.includes('github.com')) {
+      return 'URL must point to github.com.'
+    }
+    return null
+  } catch {
+    return 'Invalid URL.'
+  }
+})
+
+const isFormValid = computed(() => name.value.trim().length > 0 && !urlError.value)
 
 watch(
   () => props.projectToEdit,
@@ -33,25 +62,32 @@ watch(
   { immediate: true }
 )
 
+watch(
+  () => props.isOpen,
+  (open) => {
+    if (open) {
+      wasSubmitted.value = false
+      nextTick(() => nameInputRef.value?.focus())
+    }
+  }
+)
+
 function resetForm() {
   name.value = ''
   stackInput.value = ''
   status.value = 'active'
   githubUrl.value = ''
+  wasSubmitted.value = false
 }
 
 function handleSubmit() {
-  if (!name.value.trim()) return
-
-  const stack = stackInput.value
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean)
+  wasSubmitted.value = true
+  if (!isFormValid.value) return
 
   emit('save', {
     id: props.projectToEdit?.id,
     name: name.value.trim(),
-    stack,
+    stack: parsedStack.value,
     status: status.value,
     githubUrl: githubUrl.value.trim() || undefined,
     lastActivity: props.projectToEdit?.lastActivity || new Date().toISOString().slice(0, 10),
@@ -65,55 +101,90 @@ function handleClose() {
   resetForm()
   emit('close')
 }
+
+function handleKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape' && props.isOpen) {
+    handleClose()
+  }
+}
+
+onMounted(() => window.addEventListener('keydown', handleKeydown))
+onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown))
 </script>
 
 <template>
-  <div v-if="isOpen" class="overlay" @click.self="handleClose">
-    <div class="modal">
-      <div class="modal-header">
-        <h2>{{ projectToEdit ? 'Edit project' : 'New project' }}</h2>
-        <button class="btn-close" type="button" @click="handleClose">
-          <X :size="16" />
-        </button>
-      </div>
-
-      <form @submit.prevent="handleSubmit">
-        <label>
-          <span class="label-text">Name</span>
-          <input v-model="name" type="text" required placeholder="e.g. My Awesome App" />
-        </label>
-
-        <label>
-          <span class="label-text">GitHub Repository URL</span>
-          <div class="input-with-icon">
-            <Github :size="16" class="field-icon" />
-            <input v-model="githubUrl" type="url" placeholder="https://github.com/username/repo" />
+  <Transition name="overlay-fade">
+    <div v-if="isOpen" class="overlay" @click.self="handleClose">
+      <Transition name="modal-pop" appear>
+        <div class="modal" role="dialog" aria-modal="true">
+          <div class="modal-header">
+            <h2>{{ projectToEdit ? 'Edit project' : 'New project' }}</h2>
+            <button class="btn-close" type="button" @click="handleClose" aria-label="Close">
+              <X :size="16" />
+            </button>
           </div>
-        </label>
 
-        <label>
-          <span class="label-text">Stack (comma-separated)</span>
-          <input v-model="stackInput" type="text" placeholder="Go, TypeScript, Postgres" />
-        </label>
+          <form novalidate @submit.prevent="handleSubmit">
+            <label>
+              <span class="label-text">Name</span>
+              <input
+                ref="nameInputRef"
+                v-model="name"
+                type="text"
+                placeholder="e.g. My Awesome App"
+                :class="{ 'has-error': nameError }"
+              />
+              <span v-if="nameError" class="field-error">
+                <AlertCircle :size="13" /> {{ nameError }}
+              </span>
+            </label>
 
-        <label>
-          <span class="label-text">Status</span>
-          <div class="select-wrapper">
-            <select v-model="status">
-              <option value="active">Active</option>
-              <option value="paused">Paused</option>
-              <option value="archived">Archived</option>
-            </select>
-          </div>
-        </label>
+            <label>
+              <span class="label-text">GitHub Repository URL</span>
+              <div class="input-with-icon">
+                <Github :size="16" class="field-icon" />
+                <input
+                  v-model="githubUrl"
+                  type="url"
+                  placeholder="https://github.com/username/repo"
+                  :class="{ 'has-error': urlError }"
+                />
+              </div>
+              <span v-if="urlError" class="field-error">
+                <AlertCircle :size="13" /> {{ urlError }}
+              </span>
+            </label>
 
-        <div class="modal-actions">
-          <button class="btn-cancel" type="button" @click="handleClose">Cancel</button>
-          <button class="btn-save" type="submit">Save Project</button>
+            <label>
+              <span class="label-text">Stack (comma-separated)</span>
+              <input v-model="stackInput" type="text" placeholder="Go, TypeScript, Postgres" />
+              <div v-if="parsedStack.length > 0" class="stack-preview">
+                <span v-for="tag in parsedStack" :key="tag" class="stack-chip">{{ tag }}</span>
+              </div>
+            </label>
+
+            <label>
+              <span class="label-text">Status</span>
+              <div class="select-wrapper">
+                <select v-model="status">
+                  <option value="active">Active</option>
+                  <option value="paused">Paused</option>
+                  <option value="archived">Archived</option>
+                </select>
+              </div>
+            </label>
+
+            <div class="modal-actions">
+              <button class="btn-cancel" type="button" @click="handleClose">Cancel</button>
+              <button class="btn-save" type="submit" :disabled="wasSubmitted && !isFormValid">
+                Save Project
+              </button>
+            </div>
+          </form>
         </div>
-      </form>
+      </Transition>
     </div>
-  </div>
+  </Transition>
 </template>
 
 <style scoped>
@@ -129,6 +200,30 @@ function handleClose() {
   padding: 1rem;
 }
 
+.overlay-fade-enter-active,
+.overlay-fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.overlay-fade-enter-from,
+.overlay-fade-leave-to {
+  opacity: 0;
+}
+
+.modal-pop-enter-active {
+  transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.modal-pop-leave-active {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.modal-pop-enter-from,
+.modal-pop-leave-to {
+  opacity: 0;
+  transform: translateY(8px) scale(0.97);
+}
+
 .modal {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -140,6 +235,8 @@ function handleClose() {
   flex-direction: column;
   gap: 1.5rem;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .modal-header {
@@ -164,6 +261,8 @@ h2 {
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .btn-close:hover {
@@ -219,7 +318,7 @@ select {
   font-family: inherit;
   font-size: 0.9rem;
   outline: none;
-  transition: all 0.15s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 input:focus,
@@ -228,8 +327,41 @@ select:focus {
   box-shadow: 0 0 0 2px rgba(255, 42, 122, 0.15);
 }
 
+input.has-error {
+  border-color: #ff4d6d;
+}
+
+input.has-error:focus {
+  box-shadow: 0 0 0 2px rgba(255, 77, 109, 0.2);
+}
+
 input::placeholder {
   color: #554a6f;
+}
+
+.field-error {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  color: #ff4d6d;
+}
+
+.stack-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.15rem;
+}
+
+.stack-chip {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background: #251733;
+  border: 1px solid var(--color-border);
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-full);
 }
 
 .select-wrapper {
@@ -248,12 +380,14 @@ button {
   font-weight: 600;
   border-radius: var(--radius-md);
   padding: 0.625rem 1.25rem;
+  cursor: pointer;
 }
 
 .btn-cancel {
   background: transparent;
   color: var(--color-text-muted);
   border: 1px solid var(--color-border);
+  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .btn-cancel:hover {
@@ -267,15 +401,22 @@ button {
   color: #ffffff;
   border: 1px solid var(--color-accent);
   box-shadow: 0 4px 12px rgba(255, 42, 122, 0.2);
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
 }
 
-.btn-save:hover {
+.btn-save:hover:not(:disabled) {
   background: #e01f65;
   border-color: #e01f65;
   box-shadow: 0 6px 16px rgba(255, 42, 122, 0.3);
 }
 
-.btn-save:active {
+.btn-save:active:not(:disabled) {
   transform: scale(0.98);
+}
+
+.btn-save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 </style>
