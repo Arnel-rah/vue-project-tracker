@@ -1,13 +1,20 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { LayoutDashboard, Settings, ChevronLeft, ChevronRight, Folder, RefreshCw } from 'lucide-vue-next'
+import {
+  ChevronLeft,
+  ChevronRight,
+  Folder,
+  LayoutDashboard,
+  RefreshCw,
+  Settings,
+} from "lucide-vue-next";
+import { computed, ref } from "vue";
 
-const isCollapsed = ref(true)
+const isCollapsed = ref(true);
 
-const toggleLabel = computed(() => (isCollapsed.value ? 'Open' : 'Close'))
+const toggleLabel = computed(() => (isCollapsed.value ? "Open" : "Close"));
 
 function toggleSidebar() {
-  isCollapsed.value = !isCollapsed.value
+  isCollapsed.value = !isCollapsed.value;
 }
 </script>
 
@@ -35,34 +42,35 @@ function toggleSidebar() {
       </div>
 
       <nav class="sidebar-menu">
-        <a href="#" class="menu-item active">
+        <RouterLink to="/" class="menu-item" active-class="active">
           <LayoutDashboard :size="20" class="menu-icon" />
           <span v-show="!isCollapsed">Dashboard</span>
           <span class="menu-tooltip">Dashboard</span>
-        </a>
-        <a href="#" class="menu-item">
+        </RouterLink>
+        <RouterLink to="/projects" class="menu-item" active-class="active">
           <Folder :size="20" class="menu-icon" />
           <span v-show="!isCollapsed">Projects</span>
           <span class="menu-tooltip">Projects</span>
-        </a>
-        <a href="#" class="menu-item">
+        </RouterLink>
+        <RouterLink to="/sync" class="menu-item" active-class="active">
           <RefreshCw :size="20" class="menu-icon" />
           <span v-show="!isCollapsed">Sync Activity</span>
           <span class="menu-tooltip">Sync Activity</span>
-        </a>
+        </RouterLink>
       </nav>
 
       <nav class="sidebar-footer">
-        <a href="#" class="menu-item">
+        <RouterLink to="/settings" class="menu-item" active-class="active">
           <Settings :size="20" class="menu-icon" />
           <span v-show="!isCollapsed">Settings</span>
           <span class="menu-tooltip">Settings</span>
-        </a>
+        </RouterLink>
       </nav>
     </aside>
 
     <div class="main-content" :class="{ 'sidebar-collapsed': isCollapsed }">
-      <slot></slot>
+      <RouterView v-if="$slots.default === undefined" />
+      <slot v-else></slot>
     </div>
   </div>
 </template>
@@ -74,7 +82,6 @@ function toggleSidebar() {
   background-color: #0d0714;
   color: var(--color-text, #ffffff);
 }
-
 .sidebar {
   width: 250px;
   background-color: var(--color-surface, #1a1024);
@@ -88,11 +95,9 @@ function toggleSidebar() {
   z-index: 40;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
 .sidebar.is-collapsed {
   width: 76px;
 }
-
 .sidebar-header {
   position: relative;
   display: flex;
@@ -100,12 +105,10 @@ function toggleSidebar() {
   padding: 0 1.5rem;
   height: 80px;
 }
-
 .sidebar.is-collapsed .sidebar-header {
   padding: 0;
   justify-content: center;
 }
-
 .sidebar-brand {
   display: flex;
   align-items: center;
@@ -113,12 +116,10 @@ function toggleSidebar() {
   overflow: hidden;
   white-space: nowrap;
 }
-
 .brand-icon {
   color: var(--color-accent, #ff2a7a);
   flex-shrink: 0;
 }
-
 .brand-text {
   font-size: 1.25rem;
   font-weight: 700;
@@ -126,14 +127,12 @@ function toggleSidebar() {
   font-family: sans-serif;
   letter-spacing: -0.01em;
 }
-
 .toggle-wrapper {
   position: absolute;
   top: 26px;
   right: -13px;
   z-index: 50;
 }
-
 .toggle-btn {
   background: var(--color-surface, #1a1024);
   border: 1px solid var(--color-border, #251733);
@@ -149,18 +148,15 @@ function toggleSidebar() {
   box-shadow: 0 2px 8px rgba(13, 7, 20, 0.4);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
 .toggle-btn:hover {
   color: #ffffff;
   border-color: rgba(255, 42, 122, 0.4);
   background: #251733;
   transform: scale(1.05);
 }
-
 .toggle-btn:active {
   transform: scale(0.95);
 }
-
 .toggle-tooltip {
   position: absolute;
   top: 50%;
@@ -182,9 +178,8 @@ function toggleSidebar() {
   transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 60;
 }
-
 .toggle-tooltip::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   left: -4px;
@@ -196,13 +191,11 @@ function toggleSidebar() {
   border-bottom: 1px solid rgba(63, 39, 87, 0.4);
   rotate: 45deg;
 }
-
 .toggle-wrapper:hover .toggle-tooltip {
   opacity: 1;
   visibility: visible;
   transform: translateY(-50%) translateX(0);
 }
-
 .sidebar-menu {
   display: flex;
   flex-direction: column;
@@ -211,7 +204,6 @@ function toggleSidebar() {
   margin-top: 0.5rem;
   flex-grow: 1;
 }
-
 .sidebar-footer {
   display: flex;
   flex-direction: column;
@@ -219,7 +211,6 @@ function toggleSidebar() {
   border-top: 1px solid var(--color-border, #251733);
   margin-top: auto;
 }
-
 .menu-item {
   position: relative;
   display: flex;
@@ -235,32 +226,25 @@ function toggleSidebar() {
   transition: all 0.2s ease;
   white-space: nowrap;
 }
-
 .sidebar.is-collapsed .menu-item {
   padding: 0.75rem 0;
   justify-content: center;
 }
-
 .menu-icon {
   flex-shrink: 0;
   transition: color 0.2s ease;
 }
-
 .menu-item:hover {
   color: var(--color-text, #ffffff);
   background-color: rgba(37, 23, 51, 0.3);
 }
-
 .menu-item.active {
   color: var(--color-accent, #ff2a7a);
   background-color: rgba(255, 42, 122, 0.05);
 }
-
 .menu-item.active .menu-icon {
   color: var(--color-accent, #ff2a7a);
 }
-
-/* Tooltip des liens du menu, visible seulement quand la sidebar est repliée */
 .menu-tooltip {
   display: none;
   position: absolute;
@@ -283,9 +267,8 @@ function toggleSidebar() {
   transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 60;
 }
-
 .menu-tooltip::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   left: -4px;
@@ -297,31 +280,28 @@ function toggleSidebar() {
   border-bottom: 1px solid rgba(63, 39, 87, 0.4);
   rotate: 45deg;
 }
-
 .sidebar.is-collapsed .menu-item .menu-tooltip {
   display: block;
 }
-
 .sidebar.is-collapsed .menu-item:hover .menu-tooltip {
   opacity: 1;
   visibility: visible;
   transform: translateY(-50%) translateX(0);
 }
-
 .main-content {
   flex-grow: 1;
   margin-left: 76px;
   padding: 2rem;
   max-width: 1400px;
   width: calc(100% - 76px);
-  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
 .main-content:not(.sidebar-collapsed) {
   margin-left: 250px;
   width: calc(100% - 250px);
 }
-
 @media (max-width: 768px) {
   .sidebar {
     width: 76px;
