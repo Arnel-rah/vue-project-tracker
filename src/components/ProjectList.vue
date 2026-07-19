@@ -21,6 +21,9 @@ const {
 const isModalOpen = ref(false)
 const projectToEdit = ref<Project | null>(null)
 
+// Simulation d'un timestamp système pour la synchronisation
+const lastSyncTime = ref(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }))
+
 const totalCount = computed(() => filteredProjects.value.length)
 const activeCount = computed(() => filteredProjects.value.filter((p) => p.status === 'active').length)
 const pausedCount = computed(() => filteredProjects.value.filter((p) => p.status === 'paused').length)
@@ -66,8 +69,14 @@ function clearFilter() {
   <DashboardLayout>
     <div class="page-header">
       <div>
-        <h1>Dashboard</h1>
-        <p class="page-subtitle">Overview of your projects</p>
+        <div class="sync-meta">
+          <h1>Dashboard</h1>
+          <span class="sync-indicator">
+            <span class="sync-dot"></span>
+            SYNCED: {{ lastSyncTime }}
+          </span>
+        </div>
+        <p class="page-subtitle">Overview of your architectural matrix</p>
       </div>
     </div>
 
@@ -84,20 +93,22 @@ function clearFilter() {
 
       <div class="stat-card active-card">
         <div class="stat-icon-wrapper active-stat">
+          <div class="ambient-glow active-glow"></div>
           <BarChart3 :size="20" />
         </div>
         <div class="stat-info">
-          <span class="stat-label">Active Projects</span>
+          <span class="stat-label">Active Deployments</span>
           <span class="stat-value">{{ activeCount }}</span>
         </div>
       </div>
 
       <div class="stat-card paused-card">
         <div class="stat-icon-wrapper paused-stat">
+          <div class="ambient-glow paused-glow"></div>
           <Pause :size="20" />
         </div>
         <div class="stat-info">
-          <span class="stat-label">Paused Projects</span>
+          <span class="stat-label">Paused Services</span>
           <span class="stat-value">{{ pausedCount }}</span>
         </div>
       </div>
@@ -164,20 +175,45 @@ function clearFilter() {
   margin-bottom: 2rem;
 }
 
+.sync-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+}
+
 .page-header h1 {
   font-size: 1.75rem;
   font-weight: 700;
   font-family: sans-serif;
   color: var(--color-text, #ffffff);
-  margin: 0 0 0.25rem 0;
+  margin: 0;
   letter-spacing: -0.02em;
+}
+
+.sync-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: sans-serif;
+  color: var(--color-text-muted, #94a3b8);
+  opacity: 0.6;
+  letter-spacing: 0.05em;
+}
+
+.sync-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: var(--color-text-muted, #94a3b8);
 }
 
 .page-subtitle {
   font-size: 0.9rem;
   font-family: sans-serif;
   color: var(--color-text-muted, #94a3b8);
-  margin: 0;
+  margin: 0.25rem 0 0 0;
 }
 
 .stats-overview {
@@ -198,26 +234,17 @@ function clearFilter() {
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Hover subtils spécifiques aux accents sans briser la structure */
-.stat-card.total-card:hover {
-  border-color: rgba(255, 42, 122, 0.3);
-  box-shadow: 0 8px 24px rgba(255, 42, 122, 0.05);
+.stat-card:hover {
   transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(13, 7, 20, 0.5);
 }
 
-.stat-card.active-card:hover {
-  border-color: rgba(0, 255, 208, 0.3);
-  box-shadow: 0 8px 24px rgba(0, 255, 208, 0.05);
-  transform: translateY(-2px);
-}
-
-.stat-card.paused-card:hover {
-  border-color: rgba(255, 176, 32, 0.3);
-  box-shadow: 0 8px 24px rgba(255, 176, 32, 0.05);
-  transform: translateY(-2px);
-}
+.stat-card.total-card:hover { border-color: rgba(255, 42, 122, 0.3); }
+.stat-card.active-card:hover { border-color: rgba(0, 255, 208, 0.3); }
+.stat-card.paused-card:hover { border-color: rgba(255, 176, 32, 0.3); }
 
 .stat-icon-wrapper {
+  position: relative;
   background-color: rgba(37, 23, 51, 0.6);
   color: var(--color-text-muted, #94a3b8);
   padding: 0.85rem;
@@ -229,16 +256,39 @@ function clearFilter() {
   border: 1px solid rgba(63, 39, 87, 0.3);
 }
 
+/* Lueur ambiante et couches HUD */
+.ambient-glow {
+  position: absolute;
+  inset: -1px;
+  border-radius: var(--radius-md, 8px);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.stat-icon-wrapper :deep(svg) {
+  position: relative;
+  z-index: 1;
+}
+
 .stat-icon-wrapper.active-stat {
   color: #00ffd0;
-  background-color: rgba(0, 255, 208, 0.06);
+  background-color: rgba(0, 255, 208, 0.03);
   border-color: rgba(0, 255, 208, 0.15);
+}
+
+.active-glow {
+  box-shadow: inset 0 0 12px rgba(0, 255, 208, 0.25);
+  animation: glow-breath 3s ease-in-out infinite;
 }
 
 .stat-icon-wrapper.paused-stat {
   color: #ffb020;
-  background-color: rgba(255, 176, 32, 0.06);
+  background-color: rgba(255, 176, 32, 0.03);
   border-color: rgba(255, 176, 32, 0.15);
+}
+
+.paused-glow {
+  box-shadow: inset 0 0 10px rgba(255, 176, 32, 0.2);
 }
 
 .stat-info {
@@ -264,6 +314,12 @@ function clearFilter() {
   font-family: sans-serif;
   color: var(--color-text, #ffffff);
   line-height: 1;
+}
+
+/* Animation Respiration Lente */
+@keyframes glow-breath {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
 }
 
 .toolbar {
