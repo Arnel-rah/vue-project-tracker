@@ -72,7 +72,7 @@ function clearFilter() {
     </div>
 
     <header class="stats-overview">
-      <div class="stat-card">
+      <div class="stat-card total-card">
         <div class="stat-icon-wrapper">
           <FolderOpen :size="20" />
         </div>
@@ -82,7 +82,7 @@ function clearFilter() {
         </div>
       </div>
 
-      <div class="stat-card">
+      <div class="stat-card active-card">
         <div class="stat-icon-wrapper active-stat">
           <BarChart3 :size="20" />
         </div>
@@ -92,7 +92,7 @@ function clearFilter() {
         </div>
       </div>
 
-      <div class="stat-card">
+      <div class="stat-card paused-card">
         <div class="stat-icon-wrapper paused-stat">
           <Pause :size="20" />
         </div>
@@ -198,10 +198,23 @@ function clearFilter() {
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.stat-card:hover {
-  transform: translateY(-2px);
+/* Hover subtils spécifiques aux accents sans briser la structure */
+.stat-card.total-card:hover {
   border-color: rgba(255, 42, 122, 0.3);
-  box-shadow: 0 12px 24px rgba(13, 7, 20, 0.5);
+  box-shadow: 0 8px 24px rgba(255, 42, 122, 0.05);
+  transform: translateY(-2px);
+}
+
+.stat-card.active-card:hover {
+  border-color: rgba(0, 255, 208, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 255, 208, 0.05);
+  transform: translateY(-2px);
+}
+
+.stat-card.paused-card:hover {
+  border-color: rgba(255, 176, 32, 0.3);
+  box-shadow: 0 8px 24px rgba(255, 176, 32, 0.05);
+  transform: translateY(-2px);
 }
 
 .stat-icon-wrapper {
@@ -326,7 +339,7 @@ function clearFilter() {
 .empty-state {
   text-align: center;
   padding: 4rem 2rem;
-  border: 2px dashed var(--color-border, #251733);
+  border: 1px solid var(--color-border, #251733);
   border-radius: var(--radius-lg, 12px);
   background-color: var(--color-surface, #1a1024);
   max-width: 440px;
