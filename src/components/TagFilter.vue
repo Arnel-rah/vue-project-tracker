@@ -1,41 +1,51 @@
 <script setup lang="ts">
 import { Tag, X } from 'lucide-vue-next'
 
-defineProps<{
+interface Props {
   tags: string[]
   selectedTag: string | null
-}>()
+}
+
+const props = defineProps<Props>()
 
 const emit = defineEmits<{
-  select: [tag: string | null]
+  (e: 'select', tag: string | null): void
 }>()
+
+const handleSelect = (tag: string | null) => {
+  emit('select', tag)
+}
 </script>
 
 <template>
-  <div class="tag-filter">
-    <span class="filter-label">
-      <Tag :size="14" />
-      Filter
+  <nav class="tag-filter" aria-label="Filtres par tag">
+    <span class="filter-label" id="filter-label">
+      <Tag :size="14" aria-hidden="true" />
+      <span>Filter</span>
     </span>
 
-    <div class="filter-buttons">
+    <div class="filter-buttons" role="group" aria-labelledby="filter-label">
       <button
         type="button"
+        class="filter-btn"
         :class="{ active: selectedTag === null }"
-        @click="emit('select', null)"
+        :aria-pressed="selectedTag === null"
+        @click="handleSelect(null)"
       >
         All Projects
       </button>
 
       <button
-        v-for="tag in tags"
+        v-for="tag in props.tags"
         :key="tag"
         type="button"
+        class="filter-btn"
         :class="{ active: selectedTag === tag }"
-        @click="emit('select', tag)"
+        :aria-pressed="selectedTag === tag"
+        @click="handleSelect(tag)"
       >
-        <span class="tag-dot"></span>
-        {{ tag }}
+        <span class="tag-dot" aria-hidden="true"></span>
+        <span>{{ tag }}</span>
       </button>
     </div>
 
@@ -43,19 +53,20 @@ const emit = defineEmits<{
       v-if="selectedTag !== null"
       type="button"
       class="clear-btn"
-      @click="emit('select', null)"
+      aria-label="Effacer le filtre"
+      @click="handleSelect(null)"
     >
-      <X :size="12" />
-      Clear
+      <X :size="12" aria-hidden="true" />
+      <span>Clear</span>
     </button>
-  </div>
+  </nav>
 </template>
 
 <style scoped>
 .tag-filter {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 0.75rem 1rem;
   align-items: center;
 }
 
@@ -65,7 +76,7 @@ const emit = defineEmits<{
   gap: 0.5rem;
   font-size: 0.75rem;
   font-weight: 700;
-  font-family: sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--color-text-muted, #94a3b8);
@@ -79,40 +90,50 @@ const emit = defineEmits<{
   align-items: center;
 }
 
-button {
-  background-color: rgba(37, 23, 51, 0.4);
-  color: var(--color-text-muted, #94a3b8);
-  border: 1px solid rgba(63, 39, 87, 0.3);
-  padding: 0.45rem 1rem;
-  border-radius: var(--radius-md, 8px);
-  font-size: 0.85rem;
+.filter-btn,
+.clear-btn {
+  font-family: system-ui, -apple-system, sans-serif;
   font-weight: 600;
-  font-family: sans-serif;
   cursor: pointer;
-  white-space: nowrap;
   user-select: none;
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-button:hover {
+.filter-btn {
+  background-color: rgba(37, 23, 51, 0.4);
+  color: var(--color-text-muted, #94a3b8);
+  border: 1px solid rgba(63, 39, 87, 0.3);
+  padding: 0.45rem 0.875rem;
+  border-radius: var(--radius-md, 8px);
+  font-size: 0.85rem;
+  white-space: nowrap;
+  gap: 0.5rem;
+}
+
+.filter-btn:hover {
   background-color: #251733;
   color: var(--color-text, #ffffff);
-  border-color: rgba(255, 42, 122, 0.2);
+  border-color: rgba(255, 42, 122, 0.3);
 }
 
-button:focus-visible {
-  outline: none;
-  border-color: var(--color-accent, #ff2a7a);
-}
-
-.filter-buttons button.active {
+.filter-btn.active {
   background-color: var(--color-accent, #ff2a7a);
   color: #ffffff;
   border-color: var(--color-accent, #ff2a7a);
   box-shadow: 0 4px 12px rgba(255, 42, 122, 0.25);
+}
+
+.filter-btn:focus-visible,
+.clear-btn:focus-visible {
+  outline: 2px solid var(--color-accent, #ff2a7a);
+  outline-offset: 2px;
+}
+
+.filter-btn:active,
+.clear-btn:active {
+  transform: scale(0.96);
 }
 
 .tag-dot {
@@ -121,27 +142,24 @@ button:focus-visible {
   border-radius: 50%;
   background-color: rgba(148, 163, 184, 0.6);
   flex-shrink: 0;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-button:hover .tag-dot {
+.filter-btn:hover .tag-dot {
   background-color: var(--color-text, #ffffff);
 }
 
-button.active .tag-dot {
+.filter-btn.active .tag-dot {
   background-color: #ffffff;
   box-shadow: 0 0 6px #ffffff;
 }
 
-button:active {
-  transform: scale(0.97);
-}
-
 .clear-btn {
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md, 8px);
   color: var(--color-accent, #ff2a7a);
-  padding: 0.45rem 0.75rem;
+  padding: 0.4rem 0.625rem;
   font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -150,7 +168,7 @@ button:active {
 }
 
 .clear-btn:hover {
-  background: rgba(255, 42, 122, 0.08);
+  background: rgba(255, 42, 122, 0.1);
   color: #ffffff;
 }
 </style>
