@@ -7,20 +7,35 @@ import {
   RefreshCw,
   Settings,
 } from "lucide-vue-next";
-import { computed, ref } from "vue";
+import { computed, ref, type Component } from "vue";
+
+interface NavItem {
+  label: string;
+  to: string;
+  icon: Component;
+}
 
 const isCollapsed = ref(true);
 
-const toggleLabel = computed(() => (isCollapsed.value ? "Open" : "Close"));
+const navItems: NavItem[] = [
+  { label: "Dashboard", to: "/", icon: LayoutDashboard },
+  { label: "Projects", to: "/projects", icon: Folder },
+  { label: "Sync Activity", to: "/sync", icon: RefreshCw },
+];
+
+const footerNavItems: NavItem[] = [
+  { label: "Settings", to: "/settings", icon: Settings },
+];
+
+const toggleLabel = computed(() => (isCollapsed.value ? "Ouvrir" : "Fermer"));
 
 function toggleSidebar() {
   isCollapsed.value = !isCollapsed.value;
 }
 </script>
-
 <template>
-  <div class="dashboard-layout">
-    <aside class="sidebar" :class="{ 'is-collapsed': isCollapsed }">
+  <div class="dashboard-layout" :class="{ 'is-collapsed': isCollapsed }">
+    <aside class="sidebar">
       <div class="sidebar-header">
         <div class="sidebar-brand">
           <LayoutDashboard :size="22" class="brand-icon" />
@@ -32,7 +47,7 @@ function toggleSidebar() {
         <button
           class="toggle-btn"
           type="button"
-          :aria-label="toggleLabel + ' sidebar'"
+          :aria-label="toggleLabel + ' le menu'"
           @click="toggleSidebar"
         >
           <ChevronLeft v-if="!isCollapsed" :size="16" />
@@ -42,48 +57,58 @@ function toggleSidebar() {
       </div>
 
       <nav class="sidebar-menu">
-        <RouterLink to="/" class="menu-item" active-class="active">
-          <LayoutDashboard :size="20" class="menu-icon" />
-          <span v-show="!isCollapsed">Dashboard</span>
-          <span class="menu-tooltip">Dashboard</span>
-        </RouterLink>
-        <RouterLink to="/projects" class="menu-item" active-class="active">
-          <Folder :size="20" class="menu-icon" />
-          <span v-show="!isCollapsed">Projects</span>
-          <span class="menu-tooltip">Projects</span>
-        </RouterLink>
-        <RouterLink to="/sync" class="menu-item" active-class="active">
-          <RefreshCw :size="20" class="menu-icon" />
-          <span v-show="!isCollapsed">Sync Activity</span>
-          <span class="menu-tooltip">Sync Activity</span>
+        <RouterLink
+          v-for="item in navItems"
+          :key="item.to"
+          :to="item.to"
+          class="menu-item"
+          active-class="active"
+          :aria-label="isCollapsed ? item.label : undefined"
+        >
+          <component :is="item.icon" :size="20" class="menu-icon" />
+          <span v-show="!isCollapsed">{{ item.label }}</span>
+          <span class="menu-tooltip">{{ item.label }}</span>
         </RouterLink>
       </nav>
 
       <nav class="sidebar-footer">
-        <RouterLink to="/settings" class="menu-item" active-class="active">
-          <Settings :size="20" class="menu-icon" />
-          <span v-show="!isCollapsed">Settings</span>
-          <span class="menu-tooltip">Settings</span>
+        <RouterLink
+          v-for="item in footerNavItems"
+          :key="item.to"
+          :to="item.to"
+          class="menu-item"
+          active-class="active"
+          :aria-label="isCollapsed ? item.label : undefined"
+        >
+          <component :is="item.icon" :size="20" class="menu-icon" />
+          <span v-show="!isCollapsed">{{ item.label }}</span>
+          <span class="menu-tooltip">{{ item.label }}</span>
         </RouterLink>
       </nav>
     </aside>
 
-    <div class="main-content" :class="{ 'sidebar-collapsed': isCollapsed }">
+    <main class="main-content">
       <RouterView v-if="$slots.default === undefined" />
       <slot v-else></slot>
-    </div>
+    </main>
   </div>
 </template>
 
 <style scoped>
 .dashboard-layout {
+  --sidebar-width: 250px;
   display: flex;
   min-height: 100vh;
   background-color: #0d0714;
   color: var(--color-text, #ffffff);
 }
+
+.dashboard-layout.is-collapsed {
+  --sidebar-width: 76px;
+}
+
 .sidebar {
-  width: 250px;
+  width: var(--sidebar-width);
   background-color: var(--color-surface, #1a1024);
   border-right: 1px solid var(--color-border, #251733);
   display: flex;
@@ -95,9 +120,7 @@ function toggleSidebar() {
   z-index: 40;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.sidebar.is-collapsed {
-  width: 76px;
-}
+
 .sidebar-header {
   position: relative;
   display: flex;
@@ -105,10 +128,12 @@ function toggleSidebar() {
   padding: 0 1.5rem;
   height: 80px;
 }
-.sidebar.is-collapsed .sidebar-header {
+
+.is-collapsed .sidebar-header {
   padding: 0;
   justify-content: center;
 }
+
 .sidebar-brand {
   display: flex;
   align-items: center;
@@ -116,10 +141,12 @@ function toggleSidebar() {
   overflow: hidden;
   white-space: nowrap;
 }
+
 .brand-icon {
   color: var(--color-accent, #ff2a7a);
   flex-shrink: 0;
 }
+
 .brand-text {
   font-size: 1.25rem;
   font-weight: 700;
@@ -127,12 +154,14 @@ function toggleSidebar() {
   font-family: sans-serif;
   letter-spacing: -0.01em;
 }
+
 .toggle-wrapper {
   position: absolute;
   top: 26px;
   right: -13px;
   z-index: 50;
 }
+
 .toggle-btn {
   background: var(--color-surface, #1a1024);
   border: 1px solid var(--color-border, #251733);
@@ -148,15 +177,18 @@ function toggleSidebar() {
   box-shadow: 0 2px 8px rgba(13, 7, 20, 0.4);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
 .toggle-btn:hover {
   color: #ffffff;
   border-color: rgba(255, 42, 122, 0.4);
   background: #251733;
   transform: scale(1.05);
 }
+
 .toggle-btn:active {
   transform: scale(0.95);
 }
+
 .toggle-tooltip {
   position: absolute;
   top: 50%;
@@ -178,6 +210,7 @@ function toggleSidebar() {
   transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 60;
 }
+
 .toggle-tooltip::before {
   content: "";
   position: absolute;
@@ -191,11 +224,13 @@ function toggleSidebar() {
   border-bottom: 1px solid rgba(63, 39, 87, 0.4);
   rotate: 45deg;
 }
+
 .toggle-wrapper:hover .toggle-tooltip {
   opacity: 1;
   visibility: visible;
   transform: translateY(-50%) translateX(0);
 }
+
 .sidebar-menu {
   display: flex;
   flex-direction: column;
@@ -204,6 +239,7 @@ function toggleSidebar() {
   margin-top: 0.5rem;
   flex-grow: 1;
 }
+
 .sidebar-footer {
   display: flex;
   flex-direction: column;
@@ -211,6 +247,7 @@ function toggleSidebar() {
   border-top: 1px solid var(--color-border, #251733);
   margin-top: auto;
 }
+
 .menu-item {
   position: relative;
   display: flex;
@@ -226,25 +263,31 @@ function toggleSidebar() {
   transition: all 0.2s ease;
   white-space: nowrap;
 }
-.sidebar.is-collapsed .menu-item {
+
+.is-collapsed .menu-item {
   padding: 0.75rem 0;
   justify-content: center;
 }
+
 .menu-icon {
   flex-shrink: 0;
   transition: color 0.2s ease;
 }
+
 .menu-item:hover {
   color: var(--color-text, #ffffff);
   background-color: rgba(37, 23, 51, 0.3);
 }
+
 .menu-item.active {
   color: var(--color-accent, #ff2a7a);
   background-color: rgba(255, 42, 122, 0.05);
 }
+
 .menu-item.active .menu-icon {
   color: var(--color-accent, #ff2a7a);
 }
+
 .menu-tooltip {
   display: none;
   position: absolute;
@@ -267,6 +310,7 @@ function toggleSidebar() {
   transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 60;
 }
+
 .menu-tooltip::before {
   content: "";
   position: absolute;
@@ -280,49 +324,43 @@ function toggleSidebar() {
   border-bottom: 1px solid rgba(63, 39, 87, 0.4);
   rotate: 45deg;
 }
-.sidebar.is-collapsed .menu-item .menu-tooltip {
+
+.is-collapsed .menu-item .menu-tooltip {
   display: block;
 }
-.sidebar.is-collapsed .menu-item:hover .menu-tooltip {
+
+.is-collapsed .menu-item:hover .menu-tooltip {
   opacity: 1;
   visibility: visible;
   transform: translateY(-50%) translateX(0);
 }
+
 .main-content {
-  flex-grow: 1;
-  margin-left: 76px;
+  flex: 1;
+  margin-left: var(--sidebar-width);
   padding: 2rem;
-  max-width: 1400px;
-  width: calc(100% - 76px);
-  transition:
-    margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  width: calc(100% - var(--sidebar-width));
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.main-content:not(.sidebar-collapsed) {
-  margin-left: 250px;
-  width: calc(100% - 250px);
-}
+
 @media (max-width: 768px) {
-  .sidebar {
-    width: 76px;
+  .dashboard-layout {
+    --sidebar-width: 76px;
   }
+
   .sidebar-brand .brand-text,
   .menu-item span:not(.menu-tooltip) {
     display: none;
   }
+
   .menu-item .menu-tooltip {
     display: block;
   }
-  .toggle-wrapper {
-    right: -13px;
-  }
+
   .sidebar .menu-item {
     padding: 0.75rem 0;
     justify-content: center;
-  }
-  .main-content {
-    margin-left: 76px;
-    width: calc(100% - 76px);
   }
 }
 </style>
